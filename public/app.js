@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadReminders();
     loadAutoReplies();
     loadAIConfig();
+    initDatetimeDropdowns();
     bindFormEvents();
 });
 
@@ -210,39 +211,84 @@ function toggleReminderTimeType() {
     }
 }
 
-function triggerDatetimePicker() {
-    const input = document.getElementById('reminderDatetime');
-    if (!input) return;
-    
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    input.min = now.toISOString().slice(0, 16);
+function initDatetimeDropdowns() {
+    const dateSelect = document.getElementById('reminderDateSelect');
+    const hourSelect = document.getElementById('reminderHourSelect');
+    const minuteSelect = document.getElementById('reminderMinuteSelect');
 
-    if (typeof input.showPicker === 'function') {
-        input.showPicker();
-    } else {
-        input.focus();
-        input.click();
+    if (!dateSelect || !hourSelect || !minuteSelect) return;
+
+    // 1. Populate Dates (Next 14 Days)
+    dateSelect.innerHTML = '';
+    const now = new Date();
+    for (let i = 0; i < 14; i++) {
+        const d = new Date(now);
+        d.setDate(now.getDate() + i);
+        
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const dateVal = `${year}-${month}-${day}`;
+
+        let label = '';
+        if (i === 0) label = 'Hari Ini (' + d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) + ')';
+        else if (i === 1) label = 'Besok (' + d.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short' }) + ')';
+        else label = d.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' });
+
+        const opt = document.createElement('option');
+        opt.value = dateVal;
+        opt.textContent = label;
+        dateSelect.appendChild(opt);
     }
+
+    // 2. Populate Hours (00 - 23)
+    hourSelect.innerHTML = '';
+    for (let h = 0; h < 24; h++) {
+        const hStr = String(h).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = hStr;
+        opt.textContent = `Jam ${hStr}:00`;
+        hourSelect.appendChild(opt);
+    }
+
+    // 3. Populate Minutes (00 - 59)
+    minuteSelect.innerHTML = '';
+    for (let m = 0; m < 60; m++) {
+        const mStr = String(m).padStart(2, '0');
+        const opt = document.createElement('option');
+        opt.value = mStr;
+        opt.textContent = `${mStr} Menit`;
+        minuteSelect.appendChild(opt);
+    }
+
+    // Set smart default time (Current time + 15 mins)
+    const defaultTarget = new Date(now.getTime() + 15 * 60 * 1000);
+    const defHour = String(defaultTarget.getHours()).padStart(2, '0');
+    const defMin = String(defaultTarget.getMinutes()).padStart(2, '0');
+    
+    hourSelect.value = defHour;
+    minuteSelect.value = defMin;
+
+    updateDatetimePreview();
 }
 
-function onDatetimeSelected(input) {
-    const val = input.value;
-    const card = document.getElementById('selectedDatetimeCard');
+function updateDatetimePreview() {
+    const dateVal = document.getElementById('reminderDateSelect')?.value;
+    const hourVal = document.getElementById('reminderHourSelect')?.value;
+    const minVal = document.getElementById('reminderMinuteSelect')?.value;
     const textEl = document.getElementById('selectedDatetimeFormatted');
-    
-    if (!val) {
-        if (card) card.style.display = 'none';
-        return;
-    }
 
-    const d = new Date(val);
+    if (!dateVal || !hourVal || !minVal || !textEl) return;
+
+    const isoStr = `${dateVal}T${hourVal}:${minVal}`;
+    const d = new Date(isoStr);
+
     if (isNaN(d.getTime())) {
-        if (card) card.style.display = 'none';
+        textEl.textContent = 'Format waktu tidak valid';
         return;
     }
 
-    const formattedStr = d.toLocaleString('id-ID', {
+    textEl.textContent = d.toLocaleString('id-ID', {
         weekday: 'long',
         year: 'numeric',
         month: 'short',
@@ -250,9 +296,6 @@ function onDatetimeSelected(input) {
         hour: '2-digit',
         minute: '2-digit'
     }) + ' WIB';
-
-    if (textEl) textEl.textContent = formattedStr;
-    if (card) card.style.display = 'flex';
 }
 
 async function deleteReminder(id) {
@@ -386,21 +429,29 @@ function bindFormEvents() {
             }
             payload.delayMinutes = delayVal;
         } else {
-            const datetimeVal = document.getElementById('reminderDatetime').value;
-            if (!datetimeVal) {
-                showToast('❌ Pilih tanggal & jam pengiriman dari pop-up kalender!');
+            const dateVal = document.getElementById('reminderDateSelect').value;
+            const hourVal = document.getElementById('reminderHourSelect').value;
+            const minVal = document.getElementById('reminderMinuteSelect').value;
+
+            if (!dateVal || !hourVal || !minVal) {
+                showToast('❌ Tanggal, Jam, dan Menit wajib dipilih dari dropdown!');
                 return;
             }
-            const d = new Date(datetimeVal);
+
+            const isoStr = `${dateVal}T${hourVal}:${minVal}`;
+            const d = new Date(isoStr);
+
             if (isNaN(d.getTime())) {
                 showToast('❌ Format tanggal & jam tidak valid!');
                 return;
             }
+
             if (d.getTime() <= Date.now()) {
-                showToast('❌ Waktu pengingat harus berada di masa depan!');
+                showToast('❌ Waktu pengingat yang dipilih sudah lewat! Silakan pilih jam/menit di masa depan.');
                 return;
             }
-            payload.datetime = datetimeVal;
+
+            payload.datetime = isoStr;
         }
 
         if (!jid || !message) {
@@ -418,9 +469,6 @@ function bindFormEvents() {
             if (data.success) {
                 showToast('⏰ Reminder berhasil dijadwalkan!');
                 document.getElementById('reminderMessage').value = '';
-                document.getElementById('reminderDatetime').value = '';
-                const card = document.getElementById('selectedDatetimeCard');
-                if (card) card.style.display = 'none';
                 loadReminders();
             } else {
                 showToast('❌ Gagal: ' + data.error);

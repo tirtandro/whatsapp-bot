@@ -179,17 +179,25 @@
                                 </div>
 
                                 <div class="form-group" id="reminderDatetimeBox" style="display: none;">
-                                    <label>Pilih Tanggal & Waktu Pengiriman:</label>
-                                    <div class="datetime-picker-wrapper">
-                                        <button type="button" class="btn-picker" onclick="triggerDatetimePicker()">
-                                            📅 Buka Pop-up Kalender & Jam
-                                        </button>
-                                        <input type="datetime-local" id="reminderDatetime" class="hidden-datetime-input" onchange="onDatetimeSelected(this)">
+                                    <label>Pilih Waktu Pengiriman (Dropdown):</label>
+                                    <div class="datetime-dropdowns-grid">
+                                        <div class="dropdown-col">
+                                            <label class="sub-label">📅 Tanggal:</label>
+                                            <select id="reminderDateSelect" onchange="updateDatetimePreview()"></select>
+                                        </div>
+                                        <div class="dropdown-col">
+                                            <label class="sub-label">🕒 Jam:</label>
+                                            <select id="reminderHourSelect" onchange="updateDatetimePreview()"></select>
+                                        </div>
+                                        <div class="dropdown-col">
+                                            <label class="sub-label">⏱️ Menit:</label>
+                                            <select id="reminderMinuteSelect" onchange="updateDatetimePreview()"></select>
+                                        </div>
                                     </div>
-                                    <div id="selectedDatetimeCard" class="selected-time-card" style="display: none;">
+                                    <div id="selectedDatetimeCard" class="selected-time-card">
                                         <span class="card-icon">⏰</span>
                                         <div class="card-text">
-                                            <span class="card-label">Waktu Pengingat Dipilih:</span>
+                                            <span class="card-label">Waktu Pengingat Terjadwal:</span>
                                             <strong id="selectedDatetimeFormatted">-</strong>
                                         </div>
                                     </div>
