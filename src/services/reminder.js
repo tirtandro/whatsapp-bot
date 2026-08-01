@@ -35,7 +35,15 @@ class ReminderService {
         };
 
         this.reminders.push(reminderObj);
-        return reminderObj;
+
+        // Return safe object without circular timerId
+        return {
+            id: reminderObj.id,
+            jid: reminderObj.jid,
+            groupName: reminderObj.groupName,
+            message: reminderObj.message,
+            scheduledTime: reminderObj.scheduledTime
+        };
     }
 
     getReminders() {
