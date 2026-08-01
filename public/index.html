@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WhatsApp Bot & Groq AI Control Center</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Header / Navigation Header -->
+        <header class="top-nav">
+            <div class="brand">
+                <div class="logo-icon">🤖</div>
+                <div class="brand-text">
+                    <h1>WhatsApp Bot <span class="badge-ai">Groq AI</span></h1>
+                    <p class="subtitle">Tailscale Server: <code>100.118.236.64</code></p>
+                </div>
+            </div>
+            
+            <div class="connection-status-box">
+                <span id="statusBadge" class="status-badge checking">Memeriksa Status...</span>
+            </div>
+        </header>
+
+        <!-- Dynamic Navigation Tabs -->
+        <nav class="nav-tabs">
+            <button class="tab-btn active" data-tab="tab-overview">📊 Ringkasan & Status</button>
+            <button class="tab-btn" data-tab="tab-chat">💬 Activity Feed & Kirim Pesan</button>
+            <button class="tab-btn" data-tab="tab-reminders">⏰ Pengingat (Reminders)</button>
+            <button class="tab-btn" data-tab="tab-autoreply">⚡ Auto-Reply Kustom</button>
+            <button class="tab-btn" data-tab="tab-groq">⚡ Setelan Groq AI</button>
+        </nav>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- TAB 1: OVERVIEW & STATUS -->
+            <section id="tab-overview" class="tab-content active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📥</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Pesan Diterima</span>
+                            <h3 id="statReceived">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">📤</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Pesan Terkirim</span>
+                            <h3 id="statSent">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">⚡</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Respons Groq AI</span>
+                            <h3 id="statAI">0</h3>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👥</div>
+                        <div class="stat-info">
+                            <span class="stat-label">Grup Terhubung</span>
+                            <h3 id="statGroups">0</h3>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="glass-card full-width mt-20">
+                    <div class="card-header">
+                        <h2>📲 WhatsApp Connection & QR Code Scanner</h2>
+                    </div>
+                    <div class="card-body center-content">
+                        <div id="connectedView" style="display: none;">
+                            <div class="success-icon">✅</div>
+                            <h3>Bot WhatsApp Terhubung & Aktif!</h3>
+                            <p class="text-muted">Siap menerima pesan, merespons perintah, dan menjalankan reminder otomatis.</p>
+                        </div>
+
+                        <div id="qrBox" style="display: none;">
+                            <p class="qr-instruction">Scan QR Code di bawah ini menggunakan aplikasi WhatsApp di ponsel Anda:</p>
+                            <div class="qr-frame">
+                                <img id="qrImg" src="" alt="Scan QR Code WhatsApp">
+                            </div>
+                            <p class="text-muted small-text mt-10">QR Code akan diperbarui secara otomatis ketika kadaluarsa.</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: LIVE CHAT & DIRECT SENDER -->
+            <section id="tab-chat" class="tab-content">
+                <div class="grid-2col">
+                    <!-- Direct Message Sender -->
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2>📤 Kirim Pesan / Broadcast</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="directSendForm">
+                                <div class="form-group">
+                                    <label>Tipe Penerima:</label>
+                                    <select id="sendRecipientType" onchange="toggleRecipientInput()">
+                                        <option value="group">Pilih Grup WhatsApp</option>
+                                        <option value="direct">Nomor HP / Contact Direct</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="groupSelectBox">
+                                    <label>Pilih Grup WhatsApp:</label>
+                                    <select id="groupSelect"><option value="">Memuat daftar grup...</option></select>
+                                </div>
+
+                                <div class="form-group" id="directJidBox" style="display: none;">
+                                    <label>Nomor HP Penerima (contoh: 08123456789 atau 628123456789):</label>
+                                    <input type="text" id="directJidInput" placeholder="Masukkan nomor telepon...">
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Isi Pesan:</label>
+                                    <textarea id="directMessageInput" rows="4" placeholder="Ketik pesan yang ingin dikirim..."></textarea>
+                                </div>
+
+                                <button type="submit" class="btn-primary">🚀 Kirim Pesan Sekarang</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Realtime Activity Log Stream -->
+                    <div class="glass-card">
+                        <div class="card-header space-between">
+                            <h2>📡 Live Activity & Message Logs</h2>
+                            <span class="live-dot">● Realtime</span>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="logs-container" id="logsList">
+                                <div class="empty-state">Belum ada riwayat aktivitas pesan.</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: REMINDERS SCHEDULER -->
+            <section id="tab-reminders" class="tab-content">
+                <div class="grid-2col">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2>⏰ Jadwalkan Reminder Baru</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="scheduleForm">
+                                <div class="form-group">
+                                    <label>Pilih Target (Grup / Kontak):</label>
+                                    <select id="reminderGroupSelect"><option value="">Memuat daftar grup...</option></select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Pesan Reminder:</label>
+                                    <textarea id="reminderMessage" rows="3" placeholder="Tulis pengingat (contoh: Jangan lupa kirim laporan mingguan)..."></textarea>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Waktu Pengiriman:</label>
+                                    <select id="reminderTimeType" onchange="toggleReminderTimeType()">
+                                        <option value="delay">Beberapa Menit Lagi (Relatif)</option>
+                                        <option value="datetime">Tanggal & Waktu Spesifik (Absolut)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group" id="reminderDelayBox">
+                                    <label>Kirim berapa MENIT dari sekarang?</label>
+                                    <input type="number" id="reminderDelayMinutes" min="1" placeholder="Contoh: 15 (15 menit lagi)">
+                                </div>
+
+                                <div class="form-group" id="reminderDatetimeBox" style="display: none;">
+                                    <label>Tanggal & Jam Pengiriman:</label>
+                                    <input type="datetime-local" id="reminderDatetime">
+                                </div>
+
+                                <button type="submit" class="btn-primary">➕ Jadwalkan Reminder</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2>📋 Daftar Reminder Aktif Terjadwal</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="remindersList" class="items-list">
+                                <p class="text-muted">Memuat daftar reminder...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: AUTO-REPLY RULES -->
+            <section id="tab-autoreply" class="tab-content">
+                <div class="grid-2col">
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2>⚡ Tambah Balasan Otomatis (Auto-Reply)</h2>
+                        </div>
+                        <div class="card-body">
+                            <form id="autoReplyForm">
+                                <div class="form-group">
+                                    <label>Kata Kunci Pemicu (Keyword):</label>
+                                    <input type="text" id="arKeyword" placeholder="Contoh: harga, lokasi, jam kerja" required>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Jenis Pencocokan:</label>
+                                    <select id="arMatchType">
+                                        <option value="contains">Mengandung Kata Kunci (Contains)</option>
+                                        <option value="exact">Persis Sama (Exact Match)</option>
+                                    </select>
+                                </div>
+
+                                <div class="form-group">
+                                    <label>Pesan Balasan Otomatis Bot:</label>
+                                    <textarea id="arResponse" rows="4" placeholder="Tulis teks balasan otomatis..." required></textarea>
+                                </div>
+
+                                <button type="submit" class="btn-primary">💾 Simpan Rule Auto-Reply</button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="glass-card">
+                        <div class="card-header">
+                            <h2>📋 Rules Auto-Reply Aktif</h2>
+                        </div>
+                        <div class="card-body">
+                            <div id="autoReplyList" class="items-list">
+                                <p class="text-muted">Memuat rules auto-reply...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 5: GROQ AI SETTINGS -->
+            <section id="tab-groq" class="tab-content">
+                <div class="glass-card max-w-700">
+                    <div class="card-header">
+                        <h2>⚡ Konfigurasi Groq AI (Groq API Cloud)</h2>
+                    </div>
+                    <div class="card-body">
+                        <form id="aiConfigForm">
+                            <div class="form-group toggle-group">
+                                <label for="aiEnabled">Aktifkan Perintah Groq AI (`!ai <prompt>` / `!groq <prompt>`):</label>
+                                <input type="checkbox" id="aiEnabled" class="toggle-checkbox">
+                            </div>
+
+                            <div class="form-group toggle-group">
+                                <label for="aiFallbackEnabled">Aktifkan AI Auto-Reply Fallback (Jawab Otomatis jika Tidak Ada Rule Cocok):</label>
+                                <input type="checkbox" id="aiFallbackEnabled" class="toggle-checkbox">
+                            </div>
+
+                            <div class="form-group">
+                                <label>Groq API Key (gsk_xxxxxxxx):</label>
+                                <input type="password" id="aiApiKey" placeholder="gsk_xxxxxxxxxxxxxxxxxxxxxxxx">
+                                <span class="input-hint">Dapatkan API key gratis dari console Groq Cloud (<code>console.groq.com</code>)</span>
+                            </div>
+
+                            <div class="form-group">
+                                <label>Pilihan Model Groq LLaMA / Mixtral:</label>
+                                <select id="aiModel">
+                                    <option value="llama-3.3-70b-versatile">llama-3.3-70b-versatile (Direkomendasikan - Cerdas & Cepat)</option>
+                                    <option value="llama-3.1-8b-instant">llama-3.1-8b-instant (Super Cepat)</option>
+                                    <option value="mixtral-8x7b-32768">mixtral-8x7b-32768 (Context 32k)</option>
+                                    <option value="gemma2-9b-it">gemma2-9b-it (Google Gemma 2)</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label>System Prompt (Instruksi Kepribadian AI):</label>
+                                <textarea id="aiSystemPrompt" rows="4" placeholder="Instruksi awal untuk Groq AI..."></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-primary">💾 Simpan Setelan Groq AI</button>
+                        </form>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="toast"></div>
+
+    <script src="app.js"></script>
+</body>
+</html>

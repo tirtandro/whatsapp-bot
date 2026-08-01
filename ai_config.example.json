@@ -1,0 +1,7 @@
+{
+  "enabled": false,
+  "apiKey": "YOUR_GROQ_API_KEY_HERE",
+  "model": "llama-3.3-70b-versatile",
+  "systemPrompt": "Kamu adalah asisten AI bernama Androbot yang ramah, responsif, dan cerdas di WhatsApp. Berikan jawaban yang singkat, padat, dan berguna.",
+  "fallbackEnabled": true
+}

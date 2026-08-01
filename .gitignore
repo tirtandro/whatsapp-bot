@@ -1,0 +1,12 @@
+# Dependencies
+node_modules/
+
+# WhatsApp Auth Session & Credentials
+auth_info/
+
+# Sensitive Configuration & API Keys
+ai_config.json
+
+# Logs & Environment
+*.log
+.env

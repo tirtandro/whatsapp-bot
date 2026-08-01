@@ -1,0 +1,14 @@
+[
+  {
+    "id": "1",
+    "keyword": "jam operasional",
+    "matchType": "contains",
+    "response": "🕒 *Jam Operasional Server & Bot:*\nBot aktif 24/7 non-stop melayani pengingat dan pesan otomatis Anda."
+  },
+  {
+    "id": "2",
+    "keyword": "lokasi",
+    "matchType": "contains",
+    "response": "📍 *Lokasi Server:*\nServer Bot berjalan di komputer lokal terhubung via jaringan Tailscale."
+  }
+]
