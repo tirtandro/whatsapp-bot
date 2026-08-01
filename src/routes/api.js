@@ -63,16 +63,24 @@ router.post('/send', async (req, res) => {
 router.post('/schedule', async (req, res) => {
     const { jid, message, delayMinutes, datetime, groupName } = req.body;
     if (!jid || !message) {
-        return res.status(400).json({ error: 'jid dan message wajib diisi' });
+        return res.status(400).json({ error: 'Pilihan grup/kontak dan isi pesan pengingat wajib diisi' });
     }
 
     let targetTime = null;
-    if (delayMinutes) {
-        targetTime = new Date(Date.now() + parseInt(delayMinutes) * 60 * 1000);
+    if (delayMinutes !== undefined && delayMinutes !== null && delayMinutes !== '') {
+        const mins = parseInt(delayMinutes, 10);
+        if (isNaN(mins) || mins <= 0) {
+            return res.status(400).json({ error: 'Jumlah menit pengingat harus berupa angka lebih besar dari 0' });
+        }
+        targetTime = new Date(Date.now() + mins * 60 * 1000);
     } else if (datetime) {
         targetTime = new Date(datetime);
     } else {
-        return res.status(400).json({ error: 'Pilih delayMinutes atau datetime' });
+        return res.status(400).json({ error: 'Silakan tentukan menit penundaan atau pilih tanggal & jam pengiriman' });
+    }
+
+    if (!targetTime || isNaN(targetTime.getTime())) {
+        return res.status(400).json({ error: 'Format tanggal & waktu yang dipilih tidak valid' });
     }
 
     try {

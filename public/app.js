@@ -210,6 +210,51 @@ function toggleReminderTimeType() {
     }
 }
 
+function triggerDatetimePicker() {
+    const input = document.getElementById('reminderDatetime');
+    if (!input) return;
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    input.min = now.toISOString().slice(0, 16);
+
+    if (typeof input.showPicker === 'function') {
+        input.showPicker();
+    } else {
+        input.focus();
+        input.click();
+    }
+}
+
+function onDatetimeSelected(input) {
+    const val = input.value;
+    const card = document.getElementById('selectedDatetimeCard');
+    const textEl = document.getElementById('selectedDatetimeFormatted');
+    
+    if (!val) {
+        if (card) card.style.display = 'none';
+        return;
+    }
+
+    const d = new Date(val);
+    if (isNaN(d.getTime())) {
+        if (card) card.style.display = 'none';
+        return;
+    }
+
+    const formattedStr = d.toLocaleString('id-ID', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }) + ' WIB';
+
+    if (textEl) textEl.textContent = formattedStr;
+    if (card) card.style.display = 'flex';
+}
+
 async function deleteReminder(id) {
     if (!confirm('Apakah Anda yakin ingin membatalkan pengingat ini?')) return;
     try {
@@ -334,9 +379,28 @@ function bindFormEvents() {
         if (selectedGroup) payload.groupName = selectedGroup.subject;
 
         if (timeType === 'delay') {
-            payload.delayMinutes = document.getElementById('reminderDelayMinutes').value;
+            const delayVal = document.getElementById('reminderDelayMinutes').value;
+            if (!delayVal || parseInt(delayVal) <= 0) {
+                showToast('❌ Masukkan menit pengingat yang valid (lebih dari 0)');
+                return;
+            }
+            payload.delayMinutes = delayVal;
         } else {
-            payload.datetime = document.getElementById('reminderDatetime').value;
+            const datetimeVal = document.getElementById('reminderDatetime').value;
+            if (!datetimeVal) {
+                showToast('❌ Pilih tanggal & jam pengiriman dari pop-up kalender!');
+                return;
+            }
+            const d = new Date(datetimeVal);
+            if (isNaN(d.getTime())) {
+                showToast('❌ Format tanggal & jam tidak valid!');
+                return;
+            }
+            if (d.getTime() <= Date.now()) {
+                showToast('❌ Waktu pengingat harus berada di masa depan!');
+                return;
+            }
+            payload.datetime = datetimeVal;
         }
 
         if (!jid || !message) {
@@ -354,6 +418,9 @@ function bindFormEvents() {
             if (data.success) {
                 showToast('⏰ Reminder berhasil dijadwalkan!');
                 document.getElementById('reminderMessage').value = '';
+                document.getElementById('reminderDatetime').value = '';
+                const card = document.getElementById('selectedDatetimeCard');
+                if (card) card.style.display = 'none';
                 loadReminders();
             } else {
                 showToast('❌ Gagal: ' + data.error);

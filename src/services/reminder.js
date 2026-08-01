@@ -4,14 +4,18 @@ class ReminderService {
     }
 
     addReminder({ jid, groupName, message, targetTime, sendCallback }) {
-        const reminderId = Date.now().toString();
+        if (!targetTime || isNaN(targetTime.getTime())) {
+            throw new Error('Format tanggal & waktu pengingat tidak valid');
+        }
+
         const now = new Date();
         const msUntilTarget = targetTime.getTime() - now.getTime();
 
-        if (msUntilTarget <= 0) {
-            throw new Error('Waktu pengingat harus di masa depan');
+        if (isNaN(msUntilTarget) || msUntilTarget <= 0) {
+            throw new Error('Waktu pengingat harus berada di masa depan');
         }
 
+        const reminderId = Date.now().toString();
         const timerId = setTimeout(async () => {
             try {
                 await sendCallback(jid, `⏰ *PENGINGAT / REMINDER*\n\n${message}`);

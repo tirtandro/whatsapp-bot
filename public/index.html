@@ -179,8 +179,20 @@
                                 </div>
 
                                 <div class="form-group" id="reminderDatetimeBox" style="display: none;">
-                                    <label>Tanggal & Jam Pengiriman:</label>
-                                    <input type="datetime-local" id="reminderDatetime">
+                                    <label>Pilih Tanggal & Waktu Pengiriman:</label>
+                                    <div class="datetime-picker-wrapper">
+                                        <button type="button" class="btn-picker" onclick="triggerDatetimePicker()">
+                                            📅 Buka Pop-up Kalender & Jam
+                                        </button>
+                                        <input type="datetime-local" id="reminderDatetime" class="hidden-datetime-input" onchange="onDatetimeSelected(this)">
+                                    </div>
+                                    <div id="selectedDatetimeCard" class="selected-time-card" style="display: none;">
+                                        <span class="card-icon">⏰</span>
+                                        <div class="card-text">
+                                            <span class="card-label">Waktu Pengingat Dipilih:</span>
+                                            <strong id="selectedDatetimeFormatted">-</strong>
+                                        </div>
+                                    </div>
                                 </div>
 
                                 <button type="submit" class="btn-primary">➕ Jadwalkan Reminder</button>
